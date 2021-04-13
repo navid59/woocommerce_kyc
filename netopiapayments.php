@@ -64,10 +64,10 @@ function send_agreement() {
 	$sacKey = $ntpInstance->settings['account_id'];
 	
 	$ntpDeclare = array (
-        'completeDescription' => (bool) $ntpInstance->settings['declaration_description'] === "yes" ? true : false,
-        'priceCurrency' =>  (bool) $ntpInstance->settings['declaration_price_currency'] === "yes" ? true : false,
-        'contactInfo' =>  (bool) $ntpInstance->settings['declaration_contact_info'] === "yes" ? true : false,
-        'forbiddenBusiness' =>  (bool)  $ntpInstance->settings['declaration_forbidden_business'] === "yes" ? true : false
+        'completeDescription' => (bool) $ntpInstance->settings['declaration_description'] == "yes" ? true : false,
+        'priceCurrency' =>  (bool) $ntpInstance->settings['declaration_price_currency'] == "yes" ? true : false,
+        'contactInfo' =>  (bool) $ntpInstance->settings['declaration_contact_info'] == "yes" ? true : false,
+        'forbiddenBusiness' =>  (bool)  $ntpInstance->settings['declaration_forbidden_business'] == "yes" ? true : false
 	);
 
 	
@@ -82,12 +82,12 @@ function send_agreement() {
 	
 	
 	$ntpImg = array(
-        'netopiaLogoLink' =>   (bool) $ntpInstance->settings['netopia_logo'] === "yes" ? true : false,
+        'netopiaLogo' =>   (bool) $ntpInstance->settings['netopia_logo'] == "yes" ? true : false,
     );
 	
 	
 	$jsonData = makeActivateJson($sacKey, $ntpDeclare, $ntpUrl, $ntpImg);
-	
+	// die($jsonData);
 
 
 	$encryptData = encrypt($jsonData);
@@ -108,7 +108,7 @@ function makeActivateJson($sacKey, $declareatins, $urls, $images) {
             "declare" => $declareatins,
             "urls"    => $urls,
             "images"  => $images,
-            "ssl"     => ssl_validation(true)
+            "ssl"     => has_ssl()
           ),
       "lastUpdate" => date("c", strtotime(date("Y-m-d H:i:s"))), // To have Date & Time format on RFC3339
       "platform" => 'Woocomerce'
@@ -117,35 +117,34 @@ function makeActivateJson($sacKey, $declareatins, $urls, $images) {
     return $post_data;
 }
 
-/**
- * to check if web site has valid SSl Certificate
- * @param $toSend is define to display or retuen ssl status
- */
-function ssl_validation($toSend = false) {
-    $temp = false;
-    $serverName =   'http://netopia-system.com';
-//    $serverName =   $_SERVER['HTTP_HOST'];
-    $stream = stream_context_create (array("ssl" => array("capture_peer_cert" => true)));
-    $read   = @fopen($serverName, "rb", false, $stream);
-    $cont   = @stream_context_get_params($read);
-    $var    = @($cont["options"]["ssl"]["peer_certificate"]);
-    $result = (!is_null($var)) ? true : false;
-    $response = json_encode($result);
-    if(!$toSend)
-        echo $response;
-    else
-        return $response;
-    wp_die();
+function has_ssl() {
+	$domain = 'https://'.$_SERVER['HTTP_HOST'];
+	$stream = stream_context_create (array("ssl" => array("capture_peer_cert" => true)));
+	if( $read = @fopen($domain, "rb", false, $stream)){
+		$cont = stream_context_get_params($read);
+		if(isset($cont["options"]["ssl"]["peer_certificate"])){
+			$var = ($cont["options"]["ssl"]["peer_certificate"]);
+			$result = (!is_null($var)) ? true : false;
+		}else {
+			$result = false;
+		}            
+	} else {
+		$result = false;
+	}
+	
+	return $result;
+	wp_die();
 }
 
-function getCertificateDir(){
-	return dirname(__FILE__)."/netopia/live.AJ98-D7C5-LGCJ-T4D5-MHR1.public.cer";
+function getCertificateDir($jsonData){
+	$data = json_decode($jsonData);
+	return plugin_dir_path( __FILE__ )."netopia/live.".$data->sac_key.".public.cer";
 }
 
 function encrypt($jsonData) {
-    $x509FilePath = getCertificateDir();
+    $x509FilePath = getCertificateDir($jsonData);
     $publicKey = openssl_pkey_get_public("file://{$x509FilePath}");
-    if($publicKey === false)
+    if($publicKey == false)
       {
         $outEncData = null;
         $outEnvKey  = null;
@@ -162,7 +161,7 @@ function encrypt($jsonData) {
     $envKeys  = null;
     $result   = openssl_seal($srcData, $encData, $envKeys, $publicKeys);
 
-    if($result === false)
+    if($result == false)
       {
         $outEncData = null;
         $outEnvKey  = null;

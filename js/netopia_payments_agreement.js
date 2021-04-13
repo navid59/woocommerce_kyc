@@ -71,7 +71,6 @@ $("#askGoLive_verify").on('click', function (){
 
 
 $("#sendToVerify").on('click', function (){
-    alert('Yes Is clicked');
     $.ajax({
         url: checkAddress_ajax.ajax_url,
         method: 'POST',
