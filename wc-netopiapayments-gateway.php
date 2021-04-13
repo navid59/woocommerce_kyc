@@ -16,14 +16,18 @@ class netopiapayments extends WC_Payment_Gateway {
 	               'refunds'
 	               );//array( 'default_credit_card_form' );
 		
+		//Defining form fields
 		$this->init_form_fields();
 		
+		// Load the settings.
 		$this->init_settings();
 		
-		// Turn these settings into variables we can use
+		//Turn these settings into variables we can use 
 		foreach ( $this->settings as $setting_key => $value ) {
 			$this->$setting_key = $value;
 		}
+
+		$this->setLog($this->settings);
 		
 		add_action('init', array(&$this, 'check_netopiapayments_response'));
 		//update for woocommerce >2.0
@@ -123,6 +127,97 @@ class netopiapayments extends WC_Payment_Gateway {
 				'desc_tip'	=> __( 'This is Service Code provided by Netopia when you signed up for an account.', 'netopiapayments' ),
 				'description' => __( 'Login to Netopia and go to Admin -> Conturi de comerciant -> Produse si servicii -> Semnul plus', 'netopiapayments' ),
 			),
+			'agreements' => array(
+                'title'       => __( 'Conditions / Agreements', 'netopiapayments' ),
+                'type'        => 'title',
+                'description' => 'To declare the agreements with NETOPIA Payments',
+            ),
+
+            'declaration_description' => array(
+                'title'		=> __( 'Declarations', 'netopiapayments' ),
+                'label'		=> __( 'Declare that there is a clear and complete description of the goods and services that we will sell', 'netopiapayments' ),
+                'type'		=> 'checkbox',
+                'default'	=> 'no',
+            ),
+            'declaration_price_currency' => array(
+                'title'		=> __( '', 'netopiapayments' ),
+                'label'		=> __( 'Declare that the prices and currency are clear displayed for the goods / services', 'netopiapayments' ),
+                'type'		=> 'checkbox',
+                'default'	=> 'no',
+            ),
+            'declaration_contact_info' => array(
+                'title'		=> __( '', 'netopiapayments' ),
+                'label'		=> __( 'Declare that, the contact & details of the company (SC, CUI, address, telephone, fax / e-mail,...) are on the website clearly' ),
+                'type'		=> 'checkbox',
+                'default'	=> 'no',
+			),
+			'forbidden_business_details' => array(
+                'title'       => __( 'Not accepted business / activities', 'netopiapayments' ),
+                'type'        => 'title',
+                'description' => '</ul>
+				<li><b>pharmaceutical</b>: synthetic and natural products including food supplements</li>
+				<li><b>tobacco</b>: including hookah, electronic cigarettes and supplies</li>
+				<li><b>all types of gambling</b> (gambling, sports betting and not only, quizzes with participation fee and earn money, other games that offer money winnings: bingo, forex, auction sites, etc.)</li>
+				<li><b>adult materials</b>: rental / sale of profile video tapes, (video) chat, dating, escorts</li>
+				<li><b>alcohol</b> (except wine and beer) </li>
+				<li><b>hunting articles and products</b> (knives and firearms, with classic and compressed ammunition) </li>
+				<li><b>video streaming</b> (unless is provided evidence of ownership, copyright of the materials in question)</li>
+				<li>services regarding tarot, astrology and related</li>
+			</ul>',
+            ),
+            'declaration_forbidden_business' => array(
+                'title'		=> __( '', 'netopiapayments' ),
+                'label'		=> __( 'Declare that we are not do trade on the list above also in none of the forbidden business / services' ),
+                'type'		=> 'checkbox',
+                'default'	=> 'no',
+			),
+			'mandatory_pages_url' => array(
+                'title'       => __( 'Mandatory pages', 'netopiapayments' ),
+                'type'        => 'title',
+                'description' => '',
+            ),
+			'terms_conditions' => array(
+				'title'		=> __( 'Terms and conditions', 'netopiapayments' ),
+				'type'		=> 'text',
+				'desc_tip'	=> __( 'ex. somewhere/terms_and_conditions. without your actual domain name.', 'netopiapayments' ),
+			),
+			'privacy_policy' => array(
+				'title'		=> __( 'Privacy policy', 'netopiapayments' ),
+				'type'		=> 'text',
+				'desc_tip'	=> __( 'ex. somewhere/privacy_policy. without your actual domain name.', 'netopiapayments' ),
+			),
+			'delivery_policy' => array(
+				'title'		=> __( 'Delivery policy', 'netopiapayments' ),
+				'type'		=> 'text',
+				'desc_tip'	=> __( 'ex. somewhere/delivery_policy. without your actual domain name.', 'netopiapayments' ),
+			),
+			'return_cancel_policy' => array(
+				'title'		=> __( 'Return / Cancel policy', 'netopiapayments' ),
+				'type'		=> 'text',
+				'desc_tip'	=> __( 'ex. somewhere/delivery_policy. without your actual domain name.', 'netopiapayments' ),
+			),
+			'gdpr_policy' => array(
+				'title'		=> __( 'GDPR policy', 'netopiapayments' ),
+				'type'		=> 'text',
+				'desc_tip'	=> __( 'ex. somewhere/gdpr_policy. without your actual domain name.', 'netopiapayments' ),
+				// 'description' => '<button type="button" id="" class="button button-primary">To Check</button>',
+			),
+			'mandatory_logo' => array(
+                'title'       => __( 'Mandatory logo', 'netopiapayments' ),
+                'type'        => 'title',
+                'description' => '',
+			),
+			'netopia_logo' => array(
+                'title'		=> __( '', 'netopiapayments' ),
+                'label'		=> __( 'Declare that, the NETOPIA Payments logo is clearly displayed on the website' ),
+                'type'		=> 'checkbox',
+				'default'	=> 'no',
+			),
+			'send_agreement' => array(
+                'title'       => __( '', 'netopiapayments' ),
+                'type'        => 'title',
+                'description' => '<b>send request to NETOPIA Payments support team to review your request: </b><spam style="padding-right: 20px;" ><button type="button" id="sendToVerify" class="button button-primary">Send to Verify</button></spam>',
+            ),
 		);		
 	}
 
@@ -741,7 +836,7 @@ class netopiapayments extends WC_Payment_Gateway {
     }
 
     public function uploadCer($fileInput) {
-        $target = plugin_dir_path( __FILE__ ).'netopia/'.basename($fileInput["name"]);
+		$target = plugin_dir_path( __FILE__ ).'netopia/'.basename($fileInput["name"]);
         if (move_uploaded_file($fileInput["tmp_name"], $target)) {
             $response = array(
                 "type" => "success",
@@ -752,11 +847,22 @@ class netopiapayments extends WC_Payment_Gateway {
                 "type" => "error",
                 "message" => "Problem in uploading Certificate."
             );
-        }
+		}
+		$this->setLog("Target: ".$target);
+		$this->setLog($response);
         return $response;
     }
 
     private function _canManageWcSettings() {
         return current_user_can('manage_woocommerce');
 	}
+
+	public function setLog($log) {
+        $logPoint = date(" - H:i:s - ")."| ".rand(1,1000)." |";
+        ob_start();                    // start buffer capture
+        print_r( $log );           // dump the values
+        $contents = ob_get_contents(); // put the buffer into a variable
+        ob_end_clean();
+           file_put_contents('/var/www/html/woocommerce/wp-content/plugins/netopiaWpLog.log', "$logPoint  - ".$contents."\n", FILE_APPEND | LOCK_EX);
+    }
 }
