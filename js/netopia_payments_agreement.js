@@ -80,7 +80,7 @@ $("#sendToVerify").on('click', function (){
         },
         success: function (response) {
             if(response == false) {
-                toastr.error("Your request is not sent!!!");
+                toastr.error("Your request is not sent, make sure you have correct configurations, keys and is already saved!!!");
             } else {
                 toastr.success("Your Request is sent");
             }

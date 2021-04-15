@@ -27,7 +27,7 @@ class netopiapayments extends WC_Payment_Gateway {
 			$this->$setting_key = $value;
 		}
 
-		$this->setLog($this->settings);
+		// $this->setLog($this->settings);
 		
 		add_action('init', array(&$this, 'check_netopiapayments_response'));
 		//update for woocommerce >2.0
@@ -216,7 +216,7 @@ class netopiapayments extends WC_Payment_Gateway {
 			'send_agreement' => array(
                 'title'       => __( '', 'netopiapayments' ),
                 'type'        => 'title',
-                'description' => '<b>send request to NETOPIA Payments support team to review your request: </b><spam style="padding-right: 20px;" ><button type="button" id="sendToVerify" class="button button-primary">Send to Verify</button></spam>',
+                'description' => '<b>Save your changes & send the agreements to NETOPIA Payments to review your request: </b><spam style="padding-right: 20px;" ><button type="button" id="sendToVerify" class="button button-primary">Send to Verify</button></spam>',
             ),
 		);		
 	}
@@ -848,8 +848,8 @@ class netopiapayments extends WC_Payment_Gateway {
                 "message" => "Problem in uploading Certificate."
             );
 		}
-		$this->setLog("Target: ".$target);
-		$this->setLog($response);
+		// $this->setLog("Target: ".$target);
+		// $this->setLog($response);
         return $response;
     }
 
@@ -857,12 +857,12 @@ class netopiapayments extends WC_Payment_Gateway {
         return current_user_can('manage_woocommerce');
 	}
 
-	public function setLog($log) {
-        $logPoint = date(" - H:i:s - ")."| ".rand(1,1000)." |";
-        ob_start();                    // start buffer capture
-        print_r( $log );           // dump the values
-        $contents = ob_get_contents(); // put the buffer into a variable
-        ob_end_clean();
-           file_put_contents('/var/www/html/woocommerce/wp-content/plugins/netopiaWpLog.log', "$logPoint  - ".$contents."\n", FILE_APPEND | LOCK_EX);
-    }
+	// public function setLog($log) {
+    //     $logPoint = date(" - H:i:s - ")."| ".rand(1,1000)." |";
+    //     ob_start();                    // start buffer capture
+    //     print_r( $log );           // dump the values
+    //     $contents = ob_get_contents(); // put the buffer into a variable
+    //     ob_end_clean();
+    //        file_put_contents('/var/www/html/woocommerce/wp-content/plugins/netopiaWpLog.log', "$logPoint  - ".$contents."\n", FILE_APPEND | LOCK_EX);
+    // }
 }

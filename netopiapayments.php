@@ -137,8 +137,14 @@ function has_ssl() {
 }
 
 function getCertificateDir($jsonData){
-	$data = json_decode($jsonData);
-	return plugin_dir_path( __FILE__ )."netopia/live.".$data->sac_key.".public.cer";
+    $data = json_decode($jsonData);
+    $keyPath = plugin_dir_path( __FILE__ )."netopia/live.".$data->sac_key.".public.cer";
+    if (file_exists($keyPath)) {
+        return $keyPath;
+    }else {
+        die('0');
+    }
+	
 }
 
 function encrypt($jsonData) {
@@ -159,7 +165,8 @@ function encrypt($jsonData) {
     $publicKeys = array($publicKey);
     $encData  = null;
     $envKeys  = null;
-    $result   = openssl_seal($srcData, $encData, $envKeys, $publicKeys);
+    $cipher_algo = 'RC4';
+    $result   = openssl_seal($srcData, $encData, $envKeys, $publicKeys, $cipher_algo);
 
     if($result == false)
       {
@@ -244,11 +251,11 @@ function sendJsonCurl($encData) {
     return $finalResult;
 }
 
-function setLog($log) {
-	$logPoint = date(" - H:i:s - ")."| ".rand(1,1000)." |";
-	ob_start();                    // start buffer capture
-	print_r( $log );           // dump the values
-	$contents = ob_get_contents(); // put the buffer into a variable
-	ob_end_clean();
-	   file_put_contents('/var/www/html/woocommerce/wp-content/plugins/netopiaWpLog.log', "$logPoint  - ".$contents."\n", FILE_APPEND | LOCK_EX);
-}
+// function setLog($log) {
+// 	$logPoint = date(" - H:i:s - ")."| ".rand(1,1000)." |";
+// 	ob_start();                    // start buffer capture
+// 	print_r( $log );           // dump the values
+// 	$contents = ob_get_contents(); // put the buffer into a variable
+// 	ob_end_clean();
+// 	   file_put_contents('/var/www/html/woocommerce/wp-content/plugins/netopiaWpLog.log', "$logPoint  - ".$contents."\n", FILE_APPEND | LOCK_EX);
+// }
